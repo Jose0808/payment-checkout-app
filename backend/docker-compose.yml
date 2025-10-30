@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: payment_checkout_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payment_checkout_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - payment_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: payment_checkout_api
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: payment_checkout_db
+      PAYMENT_API_URL: https://api-sandbox.co.uat.wompi.dev/v1
+      PAYMENT_PUBLIC_KEY: pub_stagtest_g2u0HQd3ZMh05hsSgTS2lUV8t3s4mOt7
+      PAYMENT_PRIVATE_KEY: prv_stagtest_5i0ZGIGiFcDQifYsXxvsny7Y37tKqFWg
+      PAYMENT_INTEGRITY_KEY: stagtest_integrity_nAIBuqayW70XpUqJS4qf4STYiISd89Fp
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+    networks:
+      - payment_network
+    volumes:
+      - ./src:/app/src
+    command: npm run start:dev
+
+volumes:
+  postgres_data:
+
+networks:
+  payment_network:
+    driver: bridge
