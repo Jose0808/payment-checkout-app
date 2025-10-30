@@ -64,40 +64,40 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Asegurarse de estar en main
-git checkout main 2>/dev/null || git checkout -b main
+#git checkout main 2>/dev/null || git checkout -b main
 
-git checkout "feature/backend-setup"
+#git checkout "feature/backend-setup"
 
 # Commit 1: Estructura inicial
-git add package.json tsconfig.json jest.config.js nest-cli.json .gitignore .env.example 2>/dev/null || true
-create_commit "chore(setup): initialize NestJS project structure
-
-- Add package.json with dependencies
-- Configure TypeScript (strict mode)
-- Setup Jest for testing
-- Configure NestJS CLI
-- Add .gitignore and .env.example"
+#git add package.json tsconfig.json jest.config.js nest-cli.json .gitignore .env.example 2>/dev/null || true
+#create_commit "chore(setup): initialize NestJS project structure
+#
+#- Add package.json with dependencies
+#- Configure TypeScript (strict mode)
+#- Setup Jest for testing
+#- Configure NestJS CLI
+#- Add .gitignore and .env.example"
 
 # Commit 2: Configuración de base de datos
-git add src/config/ src/shared/infrastructure/database/ docker-compose.yml Dockerfile 2>/dev/null || true
-create_commit "feat(config): add database and Docker configuration
-
-- Configure TypeORM with PostgreSQL
-- Add database module
-- Setup Docker Compose for development
-- Add Dockerfile for production builds
-- Configure environment variables"
+#git add src/config/ src/shared/infrastructure/database/ docker-compose.yml Dockerfile 2>/dev/null || true
+#create_commit "feat(config): add database and Docker configuration
+#
+#- Configure TypeORM with PostgreSQL
+#- Add database module
+#- Setup Docker Compose for development
+#- Add Dockerfile for production builds
+#- Configure environment variables"
 
 # Commit 3: ESLint y Prettier
-git add .eslintrc.js .prettierrc 2>/dev/null || true
-create_commit "chore(setup): configure code quality tools
+#git add .eslintrc.js .prettierrc 2>/dev/null || true
+#create_commit "chore(setup): configure code quality tools
+#
+#- Add ESLint configuration
+#- Add Prettier configuration
+#- Configure TypeScript strict rules"
 
-- Add ESLint configuration
-- Add Prettier configuration
-- Configure TypeScript strict rules"
-
-merge_branch "develop" "feature/backend-setup"
-git branch -d feature/backend-setup
+#merge_branch "develop" "feature/backend-setup"
+#git branch -d feature/backend-setup
 
 # ============================================
 # FASE 2: Domain Layer - ROP
