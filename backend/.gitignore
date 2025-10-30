@@ -1,0 +1,112 @@
+# ============================================
+# 🚀 Node & NestJS
+# ============================================
+node_modules/
+dist/
+build/
+coverage/
+logs/
+.env
+.env.local
+.env.*.local
+
+# Compilados de TypeScript
+*.tsbuildinfo
+
+# ============================================
+# 🧪 Tests (Jest)
+# ============================================
+/coverage
+/junit.xml
+/test-results/
+*.log
+*.test.js
+*.spec.js
+
+# ============================================
+# 🐳 Docker
+# ============================================
+/docker-data/
+/postgres-data/
+/pgdata/
+*.pid
+
+# ============================================
+# 🧰 IDEs y sistema operativo
+# ============================================
+# VSCode
+.vscode/
+.history/
+.idea/
+*.swp
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ============================================
+# 🧾 Archivos de documentación o exportaciones
+# ============================================
+*.bak
+*.tmp
+*.temp
+*.log
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# ============================================
+# 📦 Dependencias locales o temporales
+# ============================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================
+# 📂 Cobertura y reportes
+# ============================================
+/coverage/
+.nyc_output/
+lcov-report/
+
+# ============================================
+# 🧠 Configuración temporal del entorno
+# ============================================
+/tmp/
+/.cache/
+/.env.test
+.env.development.local
+.env.production.local
+
+# ============================================
+# 📚 Archivos del sistema o builds del editor
+# ============================================
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# 🐙 Git
+# ============================================
+*.orig
+*.rej
+*.merge
+*.diff
+
+# ============================================
+# 🧩 Archivos del proyecto (prueba técnica)
+# ============================================
+# No subir datos sensibles ni dumps locales
+*.sql
+*.sqlite
+*.db
+/seeds/local/
+/backups/
