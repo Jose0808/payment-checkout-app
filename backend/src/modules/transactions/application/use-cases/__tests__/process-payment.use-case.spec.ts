@@ -1,209 +1,183 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ProcessPaymentUseCase } from '../process-payment.use-case';
-import { TRANSACTION_REPOSITORY } from '../../../domain/repositories/transaction.repository';
-import { PRODUCT_REPOSITORY } from '../../../../products/domain/repositories/product.repository';
-import { DELIVERY_REPOSITORY } from '../../../../deliveries/domain/repositories/delivery.repository';
-import { PAYMENT_SERVICE } from '../../../domain/services/payment.service.interface';
-import {
-  Transaction,
-  TransactionStatus,
-} from '../../../domain/entities/transaction.entity';
-import { Product } from '../../../../products/domain/entities/product.entity';
+import { ProcessPaymentUseCase, ProcessPaymentDto } from '../process-payment.use-case';
+import { Transaction, TransactionStatus } from '../../../domain/entities/transaction.entity';
+import { Result } from '@shared/domain/result/result';
 
 describe('ProcessPaymentUseCase', () => {
   let useCase: ProcessPaymentUseCase;
-  let mockTransactionRepository: any;
-  let mockProductRepository: any;
-  let mockDeliveryRepository: any;
-  let mockPaymentService: any;
+  let transactionRepository: any;
+  let productRepository: any;
+  let deliveryRepository: any;
+  let customerRepository: any;
+  let paymentService: any;
 
-  beforeEach(async () => {
-    mockTransactionRepository = {
+  const transactionMock = {
+    id: 'txn1',
+    productId: 'prod1',
+    customerId: 'cust1',
+    totalAmount: 100000,
+    transactionNumber: 'TXN-001',
+    status: TransactionStatus.PENDING,
+    approve: jest.fn().mockReturnValue(Result.ok()),
+    decline: jest.fn().mockReturnValue(Result.ok()),
+    markAsError: jest.fn().mockReturnValue(Result.ok()),
+  };
+
+  const productMock = {
+    id: 'prod1',
+    stock: 10,
+    isAvailable: jest.fn().mockReturnValue(true),
+    decreaseStock: jest.fn().mockReturnValue(Result.ok()),
+  };
+
+  const customerMock = {
+    id: 'cust1',
+    email: 'customer@test.com',
+  };
+
+  const dto: ProcessPaymentDto = {
+    transactionId: 'txn1',
+    cardNumber: '4111111111111111',
+    cardHolder: 'John Doe',
+    expirationDate: '12/26',
+    cvv: '123',
+    deliveryAddress: '123 Main St',
+    deliveryCity: 'Bogotá',
+    deliveryState: 'Cundinamarca',
+    deliveryZipCode: '110111',
+    deliveryCountry: 'CO',
+  };
+
+  beforeEach(() => {
+    transactionRepository = {
       findById: jest.fn(),
       update: jest.fn(),
     };
 
-    mockProductRepository = {
+    productRepository = {
       findById: jest.fn(),
       update: jest.fn(),
     };
 
-    mockDeliveryRepository = {
+    deliveryRepository = {
       save: jest.fn(),
     };
 
-    mockPaymentService = {
+    customerRepository = {
+      findById: jest.fn(),
+    };
+
+    paymentService = {
       processPayment: jest.fn(),
+      getTransactionStatus: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ProcessPaymentUseCase,
-        {
-          provide: TRANSACTION_REPOSITORY,
-          useValue: mockTransactionRepository,
-        },
-        {
-          provide: PRODUCT_REPOSITORY,
-          useValue: mockProductRepository,
-        },
-        {
-          provide: DELIVERY_REPOSITORY,
-          useValue: mockDeliveryRepository,
-        },
-        {
-          provide: PAYMENT_SERVICE,
-          useValue: mockPaymentService,
-        },
-      ],
-    }).compile();
-
-    useCase = module.get<ProcessPaymentUseCase>(ProcessPaymentUseCase);
+    useCase = new ProcessPaymentUseCase(
+      transactionRepository,
+      productRepository,
+      deliveryRepository,
+      customerRepository,
+      paymentService,
+    );
   });
 
-  it('should process payment successfully', async () => {
-    const transaction = Transaction.reconstitute({
-      id: 'txn-123',
-      transactionNumber: 'TXN-ABC123',
-      productId: 'prod-123',
-      customerId: 'cust-123',
-      productAmount: 100000,
-      baseFee: 1000,
-      deliveryFee: 5000,
-      totalAmount: 106000,
-      status: TransactionStatus.PENDING,
-      paymentMethod: 'CARD',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    const product = Product.reconstitute({
-      id: 'prod-123',
-      name: 'Test Product',
-      description: 'Test Description',
-      price: 100000,
-      stock: 50,
-      imageUrl: 'https://example.com/image.jpg',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    mockTransactionRepository.findById.mockResolvedValue(transaction);
-    mockProductRepository.findById.mockResolvedValue(product);
-    mockProductRepository.update.mockResolvedValue(product);
-    mockTransactionRepository.update.mockImplementation((txn: any) =>
-      Promise.resolve(txn),
-    );
-    mockDeliveryRepository.save.mockImplementation((del: any) =>
-      Promise.resolve(del),
-    );
-
-    mockPaymentService.processPayment.mockResolvedValue({
-      id: 'wompi-123',
-      status: 'APPROVED',
-      reference: 'TXN-ABC123',
-      message: 'Payment approved',
-    });
-
-    const dto = {
-      transactionId: 'txn-123',
-      cardNumber: '4111111111111111',
-      cardHolder: 'JOHN DOE',
-      expirationDate: '12/25',
-      cvv: '123',
-      deliveryAddress: 'Calle 123 #45-67',
-      deliveryCity: 'Bogotá',
-      deliveryState: 'Cundinamarca',
-      deliveryZipCode: '110111',
-      deliveryCountry: 'Colombia',
-    };
-
-    const result = await useCase.execute(dto);
-
-    expect(result.isSuccess).toBe(true);
-    expect(result.value.status).toBe(TransactionStatus.APPROVED);
-    expect(mockPaymentService.processPayment).toHaveBeenCalled();
-    expect(mockDeliveryRepository.save).toHaveBeenCalled();
-  });
-
-  it('should handle declined payment', async () => {
-    const transaction = Transaction.reconstitute({
-      id: 'txn-123',
-      transactionNumber: 'TXN-ABC123',
-      productId: 'prod-123',
-      customerId: 'cust-123',
-      productAmount: 100000,
-      baseFee: 1000,
-      deliveryFee: 5000,
-      totalAmount: 106000,
-      status: TransactionStatus.PENDING,
-      paymentMethod: 'CARD',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    const product = Product.reconstitute({
-      id: 'prod-123',
-      name: 'Test Product',
-      description: 'Test Description',
-      price: 100000,
-      stock: 50,
-      imageUrl: 'https://example.com/image.jpg',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    mockTransactionRepository.findById.mockResolvedValue(transaction);
-    mockProductRepository.findById.mockResolvedValue(product);
-    mockTransactionRepository.update.mockImplementation((txn: any) =>
-      Promise.resolve(txn),
-    );
-
-    mockPaymentService.processPayment.mockResolvedValue({
-      id: '',
-      status: 'DECLINED',
-      reference: 'TXN-ABC123',
-      message: 'Insufficient funds',
-    });
-
-    const dto = {
-      transactionId: 'txn-123',
-      cardNumber: '4111111111111111',
-      cardHolder: 'JOHN DOE',
-      expirationDate: '12/25',
-      cvv: '123',
-      deliveryAddress: 'Calle 123 #45-67',
-      deliveryCity: 'Bogotá',
-      deliveryState: 'Cundinamarca',
-      deliveryZipCode: '110111',
-      deliveryCountry: 'Colombia',
-    };
-
-    const result = await useCase.execute(dto);
-
-    expect(result.isSuccess).toBe(true);
-    expect(result.value.status).toBe(TransactionStatus.DECLINED);
-  });
-
-  it('should fail when transaction not found', async () => {
-    mockTransactionRepository.findById.mockResolvedValue(null);
-
-    const dto = {
-      transactionId: 'non-existent',
-      cardNumber: '4111111111111111',
-      cardHolder: 'JOHN DOE',
-      expirationDate: '12/25',
-      cvv: '123',
-      deliveryAddress: 'Calle 123 #45-67',
-      deliveryCity: 'Bogotá',
-      deliveryState: 'Cundinamarca',
-      deliveryZipCode: '110111',
-      deliveryCountry: 'Colombia',
-    };
+  // ✅ Scenario 1: Transaction not found
+  it('should fail if transaction does not exist', async () => {
+    transactionRepository.findById.mockResolvedValue(null);
 
     const result = await useCase.execute(dto);
 
     expect(result.isFailure).toBe(true);
-    expect(result.error.code).toBe('NOT_FOUND');
+    expect(result.error.message).toContain('Transaction');
+  });
+
+  // ✅ Scenario 2: Customer not found
+  it('should fail if customer is not found', async () => {
+    transactionRepository.findById.mockResolvedValue(transactionMock);
+    customerRepository.findById.mockResolvedValue(null);
+
+    const result = await useCase.execute(dto);
+
+    expect(result.isFailure).toBe(true);
+    expect(result.error.message).toContain('Customer');
+  });
+
+  // ✅ Scenario 3: Product not found
+  it('should fail if product is not found', async () => {
+    transactionRepository.findById.mockResolvedValue(transactionMock);
+    customerRepository.findById.mockResolvedValue(customerMock);
+    productRepository.findById.mockResolvedValue(null);
+
+    const result = await useCase.execute(dto);
+
+    expect(result.isFailure).toBe(true);
+    expect(result.error.message).toContain('Product');
+  });
+
+  // ✅ Scenario 4: Insufficient stock
+  it('should fail if product is not available', async () => {
+    const productNoStock = { ...productMock, isAvailable: jest.fn().mockReturnValue(false) };
+
+    transactionRepository.findById.mockResolvedValue(transactionMock);
+    customerRepository.findById.mockResolvedValue(customerMock);
+    productRepository.findById.mockResolvedValue(productNoStock);
+
+    const result = await useCase.execute(dto);
+
+    expect(transactionMock.decline).toHaveBeenCalled();
+    expect(result.isFailure).toBe(true);
+  });
+
+  // ✅ Scenario 5: Approved payment
+  it('should approve and create delivery when payment is approved', async () => {
+    transactionRepository.findById.mockResolvedValue(transactionMock);
+    customerRepository.findById.mockResolvedValue(customerMock);
+    productRepository.findById.mockResolvedValue(productMock);
+
+    paymentService.processPayment.mockResolvedValue({
+      id: 'pay1',
+      status: 'APPROVED',
+      reference: 'TXN-001',
+      message: 'Payment approved successfully',
+    });
+
+    const result = await useCase.execute(dto);
+
+    expect(result.isSuccess).toBe(true);
+    expect(transactionMock.approve).toHaveBeenCalledWith('pay1');
+    expect(productRepository.update).toHaveBeenCalled();
+    expect(deliveryRepository.save).toHaveBeenCalled();
+  });
+
+  // ✅ Scenario 6: Declined payment
+  it('should decline the transaction when payment is declined', async () => {
+    transactionRepository.findById.mockResolvedValue(transactionMock);
+    customerRepository.findById.mockResolvedValue(customerMock);
+    productRepository.findById.mockResolvedValue(productMock);
+
+    paymentService.processPayment.mockResolvedValue({
+      id: 'pay2',
+      status: 'DECLINED',
+      reference: 'TXN-001',
+      message: 'Insufficient funds',
+    });
+
+    const result = await useCase.execute(dto);
+
+    expect(result.isSuccess).toBe(true);
+    expect(transactionMock.decline).toHaveBeenCalledWith('Insufficient funds');
+  });
+
+  // ✅ Scenario 7: Payment error
+  it('should mark transaction as error on exception', async () => {
+    transactionRepository.findById.mockResolvedValue(transactionMock);
+    customerRepository.findById.mockResolvedValue(customerMock);
+    productRepository.findById.mockResolvedValue(productMock);
+
+    paymentService.processPayment.mockRejectedValue(new Error('Service down'));
+
+    const result = await useCase.execute(dto);
+
+    expect(result.isFailure).toBe(true);
+    expect(transactionMock.markAsError).toHaveBeenCalledWith('Service down');
   });
 });

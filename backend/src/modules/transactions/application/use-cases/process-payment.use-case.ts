@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, DomainErrors } from '@shared/domain/result/result';
 import {
   Transaction,
@@ -22,6 +22,7 @@ import {
   PaymentRequest,
 } from '../../domain/services/payment.service.interface';
 import { Delivery } from '../../../deliveries/domain/entities/delivery.entity';
+import { CUSTOMER_REPOSITORY, ICustomerRepository } from '@modules/customers/domain/repositories/customer.repository';
 
 export interface ProcessPaymentDto {
   transactionId: string;
@@ -46,9 +47,11 @@ export class ProcessPaymentUseCase {
     private readonly productRepository: IProductRepository,
     @Inject(DELIVERY_REPOSITORY)
     private readonly deliveryRepository: IDeliveryRepository,
+    @Inject(CUSTOMER_REPOSITORY)
+    private readonly customerRepository: ICustomerRepository,
     @Inject(PAYMENT_SERVICE)
     private readonly paymentService: IPaymentService,
-  ) {}
+  ) { }
 
   async execute(dto: ProcessPaymentDto): Promise<Result<Transaction>> {
     // 1. Get transaction
@@ -68,7 +71,18 @@ export class ProcessPaymentUseCase {
       );
     }
 
-    // 2. Get product
+    // 2. Get customer
+    const customer = await this.customerRepository.findById(
+      transaction.customerId,
+    );
+
+    if (!customer) {
+      return Result.fail(
+        DomainErrors.notFound('Customer', transaction.customerId),
+      );
+    }
+
+    // 3. Get product
     const product = await this.productRepository.findById(
       transaction.productId,
     );
@@ -78,7 +92,7 @@ export class ProcessPaymentUseCase {
       );
     }
 
-    // 3. Check stock again
+    // 4. Check stock again
     if (!product.isAvailable(1)) {
       const declineResult = transaction.decline('Insufficient stock');
       if (declineResult.isFailure) {
@@ -89,11 +103,11 @@ export class ProcessPaymentUseCase {
     }
 
     try {
-      // 4. Process payment
+      // 5. Process payment
       const paymentRequest: PaymentRequest = {
         amount: transaction.totalAmount,
         currency: 'COP',
-        customerEmail: '', // Get from customer
+        customerEmail: customer.email,
         reference: transaction.transactionNumber,
         cardNumber: dto.cardNumber,
         cardHolder: dto.cardHolder,
@@ -101,24 +115,36 @@ export class ProcessPaymentUseCase {
         cvv: dto.cvv,
       };
 
-      const paymentResponse =
+      let paymentResponse =
         await this.paymentService.processPayment(paymentRequest);
 
-      // 5. Update transaction based on payment response
+      if (paymentResponse.status === 'PENDING') {
+        Logger.log(`Transaction pending, simulating result in sandbox...` + paymentResponse.id);
+
+        // Esperar un momento para que se procese
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Obtener el estado actualizado
+        paymentResponse = await this.paymentService.getTransactionStatus(paymentResponse.id);
+        Logger.log(`simulated result in sandbox...` + paymentResponse.status);
+      }
+
+      // 6. Update transaction based on payment response
       if (paymentResponse.status === 'APPROVED') {
+        Logger.log('Payment approved');
         const approveResult = transaction.approve(paymentResponse.id);
         if (approveResult.isFailure) {
           return Result.fail(approveResult.error);
         }
 
-        // 6. Decrease stock
+        // 7. Decrease stock
         const decreaseStockResult = product.decreaseStock(1);
         if (decreaseStockResult.isFailure) {
           return Result.fail(decreaseStockResult.error);
         }
         await this.productRepository.update(product);
 
-        // 7. Create delivery
+        // 8. Create delivery
         const estimatedDelivery = new Date();
         estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
 
@@ -152,7 +178,7 @@ export class ProcessPaymentUseCase {
         }
       }
 
-      // 8. Save updated transaction
+      // 9. Save updated transaction
       const updatedTransaction =
         await this.transactionRepository.update(transaction);
 

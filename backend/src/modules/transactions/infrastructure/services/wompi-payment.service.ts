@@ -7,6 +7,7 @@ import {
   PaymentResponse,
 } from '../../domain/services/payment.service.interface';
 import { AppConfigService } from '@shared/infrastructure/config/app-config.service';
+import { log } from 'console';
 
 interface WompiTokenResponse {
   data: { id: string };
@@ -26,6 +27,7 @@ interface WompiTransactionResponse {
 export class WompiPaymentService implements IPaymentService {
   private readonly logger = new Logger(WompiPaymentService.name);
   private readonly httpClient: AxiosInstance;
+  private readonly integrityKey: string;
 
   constructor(private readonly paymentConfig: AppConfigService) {
     this.httpClient = axios.create({
@@ -119,7 +121,7 @@ export class WompiPaymentService implements IPaymentService {
         number: request.cardNumber,
         cvc: request.cvv,
         exp_month: expMonth,
-        exp_year: fullYear,
+        exp_year: expYear,
         card_holder: request.cardHolder,
       };
 
@@ -164,8 +166,10 @@ export class WompiPaymentService implements IPaymentService {
         installments: 1,
       },
       reference,
-      signature: { integrity: integritySignature },
+      signature: integritySignature,
     };
+
+    this.logger.log(JSON.stringify(transactionPayload));
 
     const response = await this.httpClient.post<WompiTransactionResponse>(
       '/transactions',
@@ -203,13 +207,13 @@ export class WompiPaymentService implements IPaymentService {
     return crypto.createHash('sha256').update(data).digest('hex');
   }
 
-  private mapWompiStatus(status: string): 'APPROVED' | 'DECLINED' | 'ERROR' {
-    const map: Record<string, 'APPROVED' | 'DECLINED' | 'ERROR'> = {
+  private mapWompiStatus(status: string): 'APPROVED' | 'DECLINED' | 'ERROR' | 'PENDING' {
+    const map: Record<string, 'APPROVED' | 'DECLINED' | 'ERROR' | 'PENDING'> = {
       APPROVED: 'APPROVED',
       DECLINED: 'DECLINED',
       VOIDED: 'DECLINED',
       ERROR: 'ERROR',
-      PENDING: 'ERROR',
+      PENDING: 'PENDING',
     };
     return map[status] || 'ERROR';
   }
