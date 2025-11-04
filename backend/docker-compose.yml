@@ -23,11 +23,11 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      DB_DATABASE: payment_checkout_db
+      DB_HOST: aws-1-us-east-2.pooler.supabase.com
+      DB_PORT: 6543
+      DB_USERNAME: postgres.zqqvkruuyamumhfvpgkt
+      DB_PASSWORD: Prueba123*
+      DB_DATABASE: postgres
       PAYMENT_API_URL: https://api-sandbox.co.uat.wompi.dev/v1
       PAYMENT_PUBLIC_KEY: pub_stagtest_g2u0HQd3ZMh05hsSgTS2lUV8t3s4mOt7
       PAYMENT_PRIVATE_KEY: prv_stagtest_5i0ZGIGiFcDQifYsXxvsny7Y37tKqFWg

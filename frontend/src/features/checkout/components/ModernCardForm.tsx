@@ -157,7 +157,7 @@ export const ModernCardForm: React.FC<ModernCardFormProps> = ({ onSubmit }) => {
                                     type="text"
                                     {...register('fullName', {
                                         required: 'El nombre es requerido',
-                                        minLength: { value: 3, message: 'Mínimo 3 caracteres' },
+                                        minLength: { value: 5, message: 'Mínimo 5 caracteres' },
                                     })}
                                     className={`input ${errors.fullName ? 'border-error' : ''}`}
                                     placeholder="Juan Pérez"
@@ -241,7 +241,7 @@ export const ModernCardForm: React.FC<ModernCardFormProps> = ({ onSubmit }) => {
                                     type="text"
                                     {...register('cardHolder', {
                                         required: 'El titular es requerido',
-                                        minLength: { value: 3, message: 'Mínimo 3 caracteres' },
+                                        minLength: { value: 5, message: 'Mínimo 5 caracteres' },
                                     })}
                                     className={`input uppercase ${errors.cardHolder ? 'border-error' : ''}`}
                                     placeholder="JUAN PEREZ"
