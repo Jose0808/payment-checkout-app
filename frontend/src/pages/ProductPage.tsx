@@ -44,7 +44,7 @@ export const ProductPage: React.FC = () => {
     const { products, selectedProduct, loading, error } = useAppSelector(
         state => state.product
     )
-    const { isModalOpen, isSummaryOpen, customer, cardInfo, deliveryInfo, currentStep } =
+    const { isModalOpen, isSummaryOpen, customer, cardInfo, deliveryInfo } =
         useAppSelector(state => state.checkout)
     const { currentTransaction, processing, fees } = useAppSelector(state => state.payment)
     const { lastTransaction } = useAppSelector(state => state.transaction)

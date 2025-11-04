@@ -30,7 +30,7 @@ interface ModernCardFormProps {
 export const ModernCardForm: React.FC<ModernCardFormProps> = ({ onSubmit }) => {
     const [cardType, setCardType] = useState<CardType>(CardType.UNKNOWN)
     const [showBack, setShowBack] = useState(false)
-    const [focusedField, setFocusedField] = useState<string>('')
+    const [, setFocusedField] = useState<string>('')
 
     const {
         register,
