@@ -179,10 +179,12 @@ export const ModernCardForm: React.FC<ModernCardFormProps> = ({ onSubmit }) => {
                                     type="tel"
                                     {...register('phone', {
                                         required: 'El teléfono es requerido',
+                                        minLength: { value: 10, message: 'Mínimo 10 caracteres' },
+                                        maxLength: { value: 10, message: 'Máximo 10 caracteres' },
                                         validate: value => validatePhone(value) || 'Teléfono inválido',
                                     })}
                                     className={`input ${errors.phone ? 'border-error' : ''}`}
-                                    placeholder="+57 300 123 4567"
+                                    placeholder="300 123 4567"
                                 />
                                 {errors.phone && (
                                     <p className="text-error text-sm mt-1.5 flex items-center gap-1">

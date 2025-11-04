@@ -136,7 +136,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                                 }`}
                         >
                             <ShoppingCart className="w-5 h-5" />
-                            {isOutOfStock ? 'No disponible' : 'Comprar ahora'}
+                            {isOutOfStock ? 'No disponible' : 'Pay with credit card'}
                         </button>
                     </div>
                 </div>

@@ -70,14 +70,14 @@ frontend/
 
 ### Prerrequisitos
 
-- Node.js 18+
-- Backend API corriendo en `http://localhost:3000`
+- Node.js 20+
+- Backend API corriendo en `https://payment-checkout-app.onrender.com` o localmente en `http://localhost:3000`
 
 ### Instalación
 
 ```bash
 # Clonar repositorio
-git clone <repository-url>
+git clone https://github.com/Jose0808/payment-checkout-app
 cd frontend
 
 # Instalar dependencias
@@ -137,16 +137,6 @@ npm run test:coverage
 
 # Watch mode
 npm test -- --watch
-```
-
-### Cobertura Actual
-
-```
-Coverage Summary:
-├── Statements: 85.4%
-├── Branches: 82.1%
-├── Functions: 87.2%
-└── Lines: 85.8%
 ```
 
 ## 🎨 Componentes Principales
@@ -358,19 +348,6 @@ npm run lint
 | `npm run lint` | Linter ESLint |
 | `npm run format` | Formatear con Prettier |
 
-## 🎯 Checklist de Producción
-
-- [x] Tests >80% coverage
-- [x] TypeScript sin errores
-- [x] ESLint sin warnings
-- [x] Build sin errores
-- [x] Responsive en todos los dispositivos
-- [x] Optimización de imágenes
-- [x] Lazy loading implementado
-- [x] Error boundaries
-- [x] Loading states
-- [x] Accesibilidad (ARIA labels)
-
 ## 📄 License
 
 MIT
@@ -380,5 +357,3 @@ MIT
 Jose Colmenares
 
 ---
-
-**Built with** ❤️ **using React, TypeScript, and Tailwind CSS**

@@ -120,83 +120,82 @@ export class ProcessPaymentUseCase {
 
       if (paymentResponse.status === 'PENDING') {
         Logger.log(`Transaction pending, simulating result in sandbox...` + paymentResponse.id);
-
-        // Esperar un momento para que se procese
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Obtener el estado actualizado
-        paymentResponse = await this.paymentService.getTransactionStatus(paymentResponse.id);
-        Logger.log(`simulated result in sandbox...` + paymentResponse.status);
+        let cont = 1;
+        while (paymentResponse.status === 'PENDING' && cont < 5) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          paymentResponse = await this.paymentService.getTransactionStatus(paymentResponse.id);
+          cont++;
+        }
       }
 
       // 6. Update transaction based on payment response
       if (paymentResponse.status === 'APPROVED') {
-        Logger.log('Payment approved');
-        const approveResult = transaction.approve(paymentResponse.id);
-        if (approveResult.isFailure) {
-          return Result.fail(approveResult.error);
-        }
-
-        // 7. Decrease stock
-        const decreaseStockResult = product.decreaseStock(1);
-        if (decreaseStockResult.isFailure) {
-          return Result.fail(decreaseStockResult.error);
-        }
-        await this.productRepository.update(product);
-
-        // 8. Create delivery
-        const estimatedDelivery = new Date();
-        estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
-
-        const deliveryResult = Delivery.create({
-          transactionId: transaction.id,
-          address: dto.deliveryAddress,
-          city: dto.deliveryCity,
-          state: dto.deliveryState,
-          zipCode: dto.deliveryZipCode,
-          country: dto.deliveryCountry,
-          notes: dto.deliveryNotes,
-          estimatedDelivery,
-        });
-
-        if (deliveryResult.isFailure) {
-          return Result.fail(deliveryResult.error);
-        }
-
-        await this.deliveryRepository.save(deliveryResult.value);
-      } else if (paymentResponse.status === 'DECLINED') {
-        const declineResult = transaction.decline(paymentResponse.message);
-        if (declineResult.isFailure) {
-          return Result.fail(declineResult.error);
-        }
-      } else {
-        const errorResult = transaction.markAsError(
-          paymentResponse.message || 'Unknown error',
-        );
-        if (errorResult.isFailure) {
-          return Result.fail(errorResult.error);
-        }
+      Logger.log('Payment approved');
+      const approveResult = transaction.approve(paymentResponse.id);
+      if (approveResult.isFailure) {
+        return Result.fail(approveResult.error);
       }
 
-      // 9. Save updated transaction
-      const updatedTransaction =
-        await this.transactionRepository.update(transaction);
+      // 7. Decrease stock
+      const decreaseStockResult = product.decreaseStock(1);
+      if (decreaseStockResult.isFailure) {
+        return Result.fail(decreaseStockResult.error);
+      }
+      await this.productRepository.update(product);
 
-      return Result.ok(updatedTransaction);
-    } catch (error) {
+      // 8. Create delivery
+      const estimatedDelivery = new Date();
+      estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
+
+      const deliveryResult = Delivery.create({
+        transactionId: transaction.id,
+        address: dto.deliveryAddress,
+        city: dto.deliveryCity,
+        state: dto.deliveryState,
+        zipCode: dto.deliveryZipCode,
+        country: dto.deliveryCountry,
+        notes: dto.deliveryNotes,
+        estimatedDelivery,
+      });
+
+      if (deliveryResult.isFailure) {
+        return Result.fail(deliveryResult.error);
+      }
+
+      await this.deliveryRepository.save(deliveryResult.value);
+    } else if (paymentResponse.status === 'DECLINED') {
+      const declineResult = transaction.decline(paymentResponse.message);
+      if (declineResult.isFailure) {
+        return Result.fail(declineResult.error);
+      }
+    } else {
       const errorResult = transaction.markAsError(
-        error instanceof Error ? error.message : 'Payment processing failed',
+        paymentResponse.message || 'Unknown error',
       );
       if (errorResult.isFailure) {
         return Result.fail(errorResult.error);
       }
-
-      await this.transactionRepository.update(transaction);
-      return Result.fail(
-        DomainErrors.paymentFailed(
-          error instanceof Error ? error.message : 'Unknown error',
-        ),
-      );
     }
+
+    // 9. Save updated transaction
+    const updatedTransaction =
+      await this.transactionRepository.update(transaction);
+
+    return Result.ok(updatedTransaction);
+  } catch(error) {
+    const errorResult = transaction.markAsError(
+      error instanceof Error ? error.message : 'Payment processing failed',
+    );
+    if (errorResult.isFailure) {
+      return Result.fail(errorResult.error);
+    }
+
+    await this.transactionRepository.update(transaction);
+    return Result.fail(
+      DomainErrors.paymentFailed(
+        error instanceof Error ? error.message : 'Unknown error',
+      ),
+    );
   }
+}
 }

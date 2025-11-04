@@ -28,7 +28,7 @@ describe('ProductCard', () => {
         const onBuyClick = vi.fn()
         render(<ProductCard product={mockProduct} onBuyClick={onBuyClick} />)
 
-        const button = screen.getByText(/Comprar ahora/)
+        const button = screen.getByText(/Pay with credit card/)
         fireEvent.click(button)
 
         expect(onBuyClick).toHaveBeenCalledWith(mockProduct)

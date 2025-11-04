@@ -18,7 +18,6 @@ describe('GetTransactionUseCase', () => {
     });
 
     it('should return a transaction when found', async () => {
-        // Arrange
         const mockTransaction = Transaction.reconstitute({
             id: 'txn_123',
             transactionNumber: 'TXN-TEST-001',
@@ -36,44 +35,73 @@ describe('GetTransactionUseCase', () => {
 
         transactionRepository.findById.mockResolvedValue(mockTransaction);
 
-        // Act
         const result = await getTransactionUseCase.execute('txn_123');
 
-        // Assert
         expect(result.isSuccess).toBe(true);
         expect(result.value).toEqual(mockTransaction);
+        expect(result.error).toBeUndefined();
         expect(transactionRepository.findById).toHaveBeenCalledWith('txn_123');
     });
 
     it('should return a failure when transaction not found', async () => {
-        // Arrange
         transactionRepository.findById.mockResolvedValue(null);
 
-        // Act
         const result = await getTransactionUseCase.execute('invalid_id');
 
-        // Assert
         expect(result.isFailure).toBe(true);
-        expect(result.error).toEqual(
-            DomainErrors.notFound('Transaction', 'invalid_id'),
-        );
+        expect(result.value).toBeUndefined();
+        expect(result.error).toEqual(DomainErrors.notFound('Transaction', 'invalid_id'));
         expect(transactionRepository.findById).toHaveBeenCalledWith('invalid_id');
     });
 
-    it('should propagate repository errors as failures', async () => {
-        // Arrange
-        transactionRepository.findById.mockRejectedValue(
-            new Error('Database connection failed'),
-        );
+    it('should return a failure when repository throws an error', async () => {
+        const error = new Error('Database connection failed');
+        transactionRepository.findById.mockRejectedValue(error);
 
-        // Act
-        let result: Result<Transaction>;
-        try {
-            result = await getTransactionUseCase.execute('txn_error');
-        } catch (error) {
-            // Assert
-            expect(error.message).toBe('Database connection failed');
-            expect(transactionRepository.findById).toHaveBeenCalledWith('txn_error');
-        }
+        const result = await getTransactionUseCase.execute('txn_error');
+
+        expect(result.isFailure).toBe(true);
+        expect(result.value).toBeUndefined();
+        expect(transactionRepository.findById).toHaveBeenCalledWith('txn_error');
+    });
+
+    it('should handle undefined transactionId gracefully', async () => {
+        transactionRepository.findById.mockResolvedValue(null);
+
+        const result = await getTransactionUseCase.execute(undefined as any);
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toEqual(DomainErrors.notFound('Transaction', undefined));
+        expect(transactionRepository.findById).toHaveBeenCalledWith(undefined);
+    });
+
+    it('should handle empty transactionId gracefully', async () => {
+        transactionRepository.findById.mockResolvedValue(null);
+
+        const result = await getTransactionUseCase.execute('');
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toEqual(DomainErrors.notFound('Transaction', ''));
+        expect(transactionRepository.findById).toHaveBeenCalledWith('');
+    });
+
+    it('should return failure when repository returns undefined', async () => {
+        transactionRepository.findById.mockResolvedValue(null);
+
+        const result = await getTransactionUseCase.execute('txn_undefined');
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toEqual(DomainErrors.notFound('Transaction', 'txn_undefined'));
+        expect(transactionRepository.findById).toHaveBeenCalledWith('txn_undefined');
+    });
+
+    it('should return failure when repository returns null', async () => {
+        transactionRepository.findById.mockResolvedValue(null);
+
+        const result = await getTransactionUseCase.execute('txn_null');
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toEqual(DomainErrors.notFound('Transaction', 'txn_null'));
+        expect(transactionRepository.findById).toHaveBeenCalledWith('txn_null');
     });
 });

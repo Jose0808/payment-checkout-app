@@ -19,6 +19,16 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/shared/$1',
     '^@config/(.*)$': '<rootDir>/config/$1',
   },
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '\\.schema\\.ts$',
+    'run-seed\\.ts$',
+    'seed\\.ts$',
+    '\\.module\\.ts$',
+    '\\.interface\\.ts$',
+    'main\\.ts$',
+  ],
   coverageThreshold: {
     global: {
       branches: 80,

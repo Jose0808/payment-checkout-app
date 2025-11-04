@@ -12,10 +12,9 @@ A full-stack e-commerce payment checkout application with credit card processing
 
 ## 📋 Prerequisites
 
-- Node.js 18+
-- PostgreSQL 14+
+- Node.js 20+
+- PostgreSQL
 - Docker & Docker Compose
-- AWS CLI configured
 
 ## 🚀 Quick Start
 
@@ -23,7 +22,7 @@ A full-stack e-commerce payment checkout application with credit card processing
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/Jose0808/payment-checkout-app
 
 # Start all services
 docker-compose up -d
@@ -56,9 +55,7 @@ npm test -- --coverage
 ```
 payment-checkout-app/
 ├── frontend/          # React SPA
-├── backend/           # NestJS API
-├── infrastructure/    # IaC (Terraform)
-└── docs/             # Documentation
+└── backend/           # NestJS API
 ```
 
 ## 🏛️ Architecture Patterns
@@ -82,16 +79,24 @@ payment-checkout-app/
 
 ## 📚 API Documentation
 
-- Swagger UI: `http://localhost:3000/api/docs`
-- Postman Collection: [Link]
+- Swagger UI: `https://payment-checkout-app.onrender.com/api/docs`
 
 ## 🗄️ Database Schema
 
-[Database diagram to be added]
+![alt text](Database_Schema.png)
 
-## 🚢 Deployment
 
-Application deployed at: [URL to be added]
+### Cobertura Actual
+
+Front:
+![alt text](image.png)
+
+Back:
+![alt text](image-1.png)
+
+### Cloud Environment
+
+https://dashboard.render.com/project/prj-d44p8mmuk2gs73fjun4g/environment/evm-d44p8mmuk2gs73fjun50
 
 ## 📝 License
 
@@ -99,4 +104,4 @@ MIT
 
 ## 👥 Author
 
-[Your Name]
+Jose Colmenares
