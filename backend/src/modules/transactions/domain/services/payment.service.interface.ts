@@ -11,7 +11,7 @@ export interface PaymentRequest {
 
 export interface PaymentResponse {
   id: string;
-  status: 'APPROVED' | 'DECLINED' | 'ERROR';
+  status: 'APPROVED' | 'DECLINED' | 'ERROR' | 'PENDING';
   reference: string;
   message?: string;
 }
